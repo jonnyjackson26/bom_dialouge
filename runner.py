@@ -28,6 +28,7 @@ dialouge=[]
 bookIndex=0
 path="1-nephi.txt"
 with open(path, "r") as file:
+    unfinishedDialouge=None
     verse=1
     chapter=1 #need to think about if i want to start with 0 or 1
     for line in file:
@@ -37,14 +38,24 @@ with open(path, "r") as file:
             chapter += .5 # bc theres two blank lines before each new chapter
 
         if ">" in line and "<" in line: 
+            if unfinishedDialouge!=None and f"</{unfinishedDialouge.who}>" in line: #the end of a multi-versed quote (that was opened previously)
+                unfinishedDialouge.end_verse=verse
+                unfinishedDialouge.end_word=len(line[:line.index(f"</{unfinishedDialouge.who}>")].split())-1
+                dialouge.append(unfinishedDialouge)
+                unfinishedDialouge=None
+                
             who=line[line.index("<")+1:line.index(">")]
             if f"</{who}>" in line:
                 startWord=len(line[:line.index("<")].split())-1 #tells how many words (seperated by " ") are before the first index of "<"
                 endWord=len(line[:line.index("</")].split())-1
-                dialouge.append(Dialogue(who.lower(),bookIndex,chapter,verse,verse,startWord,endWord))
+                dialouge.append(Dialogue(who,bookIndex,chapter,verse,verse,startWord,endWord))
+            else: #the quote is multi-versed lol like spans over more than just one verse
+                startWord=len(line[:line.index("<")].split())-1
+                unfinishedDialouge=Dialogue(who,bookIndex,chapter,verse,None,startWord,None)
+                
 
 for d in dialouge:
-    print(d.toString())
+    d.who=d.who.lower()
 
 writeToDialougeFile()
 
