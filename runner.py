@@ -43,6 +43,7 @@ with open(path, "r") as file:
                 unfinishedDialouge.end_word=len(line[:line.index(f"</{unfinishedDialouge.who}>")].split())-1
                 dialouge.append(unfinishedDialouge)
                 unfinishedDialouge=None
+
                 
             who=line[line.index("<")+1:line.index(">")]
             if f"</{who}>" in line:
@@ -52,6 +53,22 @@ with open(path, "r") as file:
             else: #the quote is multi-versed lol like spans over more than just one verse
                 startWord=len(line[:line.index("<")].split())-1
                 unfinishedDialouge=Dialogue(who,bookIndex,chapter,verse,None,startWord,None)
+
+            #two dialouges in one verse
+            lineWithoutWhoTag=line.replace(f"</{who}>",'').replace(f"<{who}>",'')
+            if ("<" in lineWithoutWhoTag) and ( ">" in lineWithoutWhoTag):
+                who=lineWithoutWhoTag[lineWithoutWhoTag.index("<")+1:lineWithoutWhoTag.index(">")]
+                if who[0:1]=="/":
+                    pass #probably something with nested dialouge
+                else:
+                    print(f"{who} has a multi dialouge verse in {chapter}:{verse}")
+                    if f"</{who}>" in lineWithoutWhoTag:
+                        startWord=len(lineWithoutWhoTag[:lineWithoutWhoTag.index("<")].split())-1 #tells how many words (seperated by " ") are before the first index of "<"
+                        endWord=len(lineWithoutWhoTag[:lineWithoutWhoTag.index("</")].split())-1
+                        dialouge.append(Dialogue(who,bookIndex,chapter,verse,verse,startWord,endWord))
+                    else: #the quote is multi-versed lol like spans over more than just one verse
+                        startWord=len(lineWithoutWhoTag[:lineWithoutWhoTag.index("<")].split())-1
+                        unfinishedDialouge=Dialogue(who,bookIndex,chapter,verse,None,startWord,None)
                 
 
 for d in dialouge:
